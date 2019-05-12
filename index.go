@@ -19,25 +19,25 @@ func SecretHandler(w http.ResponseWriter, r *http.Request) {
 	if secretsLookup == nil {
 		err := loadSecrets()
 		if err != nil {
-			sendError(w, "could not load secrets from file: "+err.Error(), 500)
+			SendError(w, "could not load secrets from file: "+err.Error(), 500)
 			return
 		}
 	}
 	auth := r.Header.Get("Authorization")
 	serviceName, err := getSecretName(r)
 	if err != nil {
-		sendError(w, "must send secret name {name: \"mysecret\"}", 400)
+		SendError(w, "must send secret name {name: \"mysecret\"}", 400)
 		return
 	}
 	if secret, ok := secretsLookup[serviceName+"_"+auth]; ok {
 		data, err := json.Marshal(secret)
 		if err != nil {
-			sendError(w, "could not unmarshal secret: "+err.Error(), 500)
+			SendError(w, "could not unmarshal secret: "+err.Error(), 500)
 			return
 		}
 		w.Write(data)
 	} else {
-		sendError(w, "secret not found", 404)
+		SendError(w, "secret not found", 404)
 		return
 	}
 }
@@ -55,7 +55,8 @@ func getSecretName(r *http.Request) (string, error) {
 	return secret.Name, nil
 }
 
-func sendError(w http.ResponseWriter, message string, status int) {
+// SendError responds with a string and an error code
+func SendError(w http.ResponseWriter, message string, status int) {
 	w.WriteHeader(status)
 	w.Write([]byte(message))
 }
