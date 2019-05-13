@@ -30,7 +30,7 @@ func SecretHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	lastFourDigits := string(auth[len(auth)-4:])
-	log.Printf("accessing secret: ****%s: %s\n", lastFourDigits, secretName)
+	log.Printf("accessing secret \"%s\" with auth code ****%s\n", secretName, lastFourDigits)
 	if secret, ok := secretsLookup[secretName+"_"+auth]; ok {
 		data, err := json.Marshal(secret)
 		if err != nil {
