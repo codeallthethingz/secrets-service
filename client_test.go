@@ -14,7 +14,7 @@ import (
 func TestGetSecret(t *testing.T) {
 	dir := setup()
 	defer teardown(dir)
-	file := dir + "/secret.test.json"
+	file := dir + "/secrets.test.json"
 	os.Setenv("SECRET_FILE", file)
 	os.Setenv("PASSPHRASE", "sillypassphrase")
 	testServer := httptest.NewServer(
