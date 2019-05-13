@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"log"
+
 	"github.com/codeallthethingz/secrets/model"
 )
 
@@ -14,30 +16,30 @@ var secretsLookup map[string]*model.Secret
 
 //SecretHandler returns a secret if you're authorized
 func SecretHandler(w http.ResponseWriter, r *http.Request) {
-	wd, _ := os.Getwd()
-	fmt.Println("CWD: " + wd)
 	if secretsLookup == nil {
 		err := loadSecrets()
 		if err != nil {
-			sendError(w, "could not load secrets from file: "+err.Error(), 500)
+			sendError(w, "could not load secrets from file: "+err.Error(), err, 500)
 			return
 		}
 	}
 	auth := r.Header.Get("Authorization")
-	serviceName, err := getSecretName(r)
+	secretName, err := getSecretName(r)
 	if err != nil {
-		sendError(w, "must send secret name {name: \"mysecret\"}", 400)
+		sendError(w, "must send secret name {name: \"mysecret\"}", err, 400)
 		return
 	}
-	if secret, ok := secretsLookup[serviceName+"_"+auth]; ok {
+	lastFourDigits := string(auth[len(auth)-4:])
+	log.Printf("accessing secret: ****%s: %s\n", lastFourDigits, secretName)
+	if secret, ok := secretsLookup[secretName+"_"+auth]; ok {
 		data, err := json.Marshal(secret)
 		if err != nil {
-			sendError(w, "could not unmarshal secret: "+err.Error(), 500)
+			sendError(w, "could not unmarshal secret: "+err.Error(), err, 500)
 			return
 		}
 		w.Write(data)
 	} else {
-		sendError(w, "secret not found", 404)
+		sendError(w, "secret not found", fmt.Errorf("not found in lookup"), 404)
 		return
 	}
 }
@@ -56,14 +58,17 @@ func getSecretName(r *http.Request) (string, error) {
 }
 
 // sendError responds with a string and an error code
-func sendError(w http.ResponseWriter, message string, status int) {
+func sendError(w http.ResponseWriter, message string, err error, status int) {
+	log.Println(err)
 	w.WriteHeader(status)
 	w.Write([]byte(message))
 }
 
 func loadSecrets() error {
+	wd, _ := os.Getwd()
 	passphrase := os.Getenv("PASSPHRASE")
 	file := os.Getenv("SECRET_FILE")
+	log.Println("Loading secrets from: " + wd + "/" + file)
 	secretsFile, err := model.LoadOrCreateSecretsFile(file, passphrase)
 	if err != nil {
 		return err
