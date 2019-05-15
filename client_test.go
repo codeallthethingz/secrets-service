@@ -35,7 +35,7 @@ func TestGetSecret(t *testing.T) {
 		Name:   "rpm.org",
 		Secret: []byte("authcode"),
 	})
-	secretsFile.Save(file, "sillypassphrase")
+	secretsFile.Save("sillypassphrase")
 	secretsClient := NewSecretsClient(testServer.URL, "authcode")
 	secret, err := secretsClient.Get("secretname")
 	if err != nil {

@@ -24,6 +24,10 @@ func SecretHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	auth := r.Header.Get("Authorization")
+	if auth == "" || len(auth) < 4 {
+		sendError(w, "must send Authorization header with token", nil, 400)
+		return
+	}
 	secretName, err := getSecretName(r)
 	if err != nil {
 		sendError(w, "must send secret name {name: \"mysecret\"}", err, 400)
